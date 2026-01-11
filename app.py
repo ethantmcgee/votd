@@ -10,9 +10,11 @@ FEED_URL = "https://www.biblegateway.com/votd/get/?format=json"
 
 
 def fetch_and_convert():
-    if cache["votd"]:
+    if "votd" not in cache:
         content = requests.get(FEED_URL).json()
         cache["votd"] = content
+    else:
+        content = cache["votd"]
 
     items_xml = f"""
     <item>
@@ -38,34 +40,15 @@ def fetch_and_convert():
 @app.route("/")
 def rss_feed():
     """Serve the RSS feed."""
-    try:
-        rss_content = fetch_and_convert()
-        return Response(
-            rss_content,
-            mimetype="application/rss+xml",
-            headers={
-                "Cache-Control": "public, max-age=3600",
-                "Access-Control-Allow-Origin": "*"
-            }
-        )
-    except requests.RequestException as e:
-        return Response(
-            f"Failed to fetch upstream feed: {str(e)}",
-            status=502,
-            mimetype="text/plain"
-        )
-    except ET.ParseError as e:
-        return Response(
-            f"Failed to parse feed XML: {str(e)}",
-            status=500,
-            mimetype="text/plain"
-        )
-    except Exception as e:
-        return Response(
-            f"Error processing feed: {str(e)}",
-            status=500,
-            mimetype="text/plain"
-        )
+    rss_content = fetch_and_convert()
+    return Response(
+        rss_content,
+        mimetype="application/rss+xml",
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
 
 
 @app.route("/health")
