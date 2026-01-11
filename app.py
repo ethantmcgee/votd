@@ -1,0 +1,79 @@
+import requests
+from flask import Flask, Response
+import xml.etree.ElementTree as ET
+from expiringdict import ExpiringDict
+
+app = Flask(__name__)
+cache = ExpiringDict(max_len=100, max_age_seconds=3600)
+
+FEED_URL = "https://www.biblegateway.com/votd/get/?format=json"
+
+
+def fetch_and_convert():
+    if cache["votd"]:
+        content = requests.get(FEED_URL).json()
+        cache["votd"] = content
+
+    items_xml = f"""
+    <item>
+      <title>{content['votd']['reference']}</title>
+      <link>{content['votd']['permalink']}</link>
+      <description>{content['votd']['text']}</description>
+    </item>"""
+
+    # Build RSS 2.0 feed
+    rss_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Bible Gateway Verse of the Day</title>
+    <link>https://biblegateway.com</link>
+    <description>Bible Gateway Verse of the Day</description>
+    {items_xml}
+  </channel>
+</rss>"""
+
+    return rss_xml
+
+
+@app.route("/")
+def rss_feed():
+    """Serve the RSS feed."""
+    try:
+        rss_content = fetch_and_convert()
+        return Response(
+            rss_content,
+            mimetype="application/rss+xml",
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "Access-Control-Allow-Origin": "*"
+            }
+        )
+    except requests.RequestException as e:
+        return Response(
+            f"Failed to fetch upstream feed: {str(e)}",
+            status=502,
+            mimetype="text/plain"
+        )
+    except ET.ParseError as e:
+        return Response(
+            f"Failed to parse feed XML: {str(e)}",
+            status=500,
+            mimetype="text/plain"
+        )
+    except Exception as e:
+        return Response(
+            f"Error processing feed: {str(e)}",
+            status=500,
+            mimetype="text/plain"
+        )
+
+
+@app.route("/health")
+def health():
+    """Health check endpoint."""
+    return "OK"
+
+
+if __name__ == "__main__":
+    # Run on all interfaces, port 8080, HTTP only
+    app.run(host="0.0.0.0", port=8080, debug=False)
