@@ -1,7 +1,21 @@
+import html
 import requests
 from flask import Flask, Response
 import xml.etree.ElementTree as ET
 from expiringdict import ExpiringDict
+
+
+def clean_text(text):
+    """Convert HTML entities to ASCII equivalents."""
+    # Decode HTML entities like &ldquo; &rdquo; etc.
+    text = html.unescape(text)
+    # Convert smart quotes to regular ASCII quotes
+    text = text.replace('"', '"').replace('"', '"')
+    text = text.replace(''', "'").replace(''', "'")
+    # Convert other common Unicode to ASCII
+    text = text.replace('—', '--').replace('–', '-')
+    text = text.replace('…', '...')
+    return text
 
 app = Flask(__name__)
 cache = ExpiringDict(max_len=100, max_age_seconds=3600)
@@ -20,12 +34,12 @@ def fetch_and_convert():
     <item>
       <title>{content['votd']['reference']}</title>
       <link>{content['votd']['permalink']}</link>
-      <description>Verse of the Day
+      <description><![CDATA[Verse of the Day
 
-      {content['votd']['text']}
+      {clean_text(content['votd']['text'])}
 
       {content['votd']['reference']}
-      </description>
+      ]]></description>
     </item>"""
 
     # Build RSS 2.0 feed
