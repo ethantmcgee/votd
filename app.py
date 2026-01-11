@@ -20,7 +20,12 @@ def fetch_and_convert():
     <item>
       <title>{content['votd']['reference']}</title>
       <link>{content['votd']['permalink']}</link>
-      <description>{content['votd']['text']}</description>
+      <description>Verse of the Day
+
+      {content['votd']['text']}
+
+      {content['votd']['reference']}
+      </description>
     </item>"""
 
     # Build RSS 2.0 feed
