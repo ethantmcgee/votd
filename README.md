@@ -2,6 +2,14 @@
 
 A simple Flask application that fetches the Bible Gateway Verse of the Day and serves it as an RSS 2.0 feed.
 
+## Docker Container
+
+https://hub.docker.com/repository/docker/ethantmcgee/votd/
+
+## Hosted Version
+
+https://votd.ethantmcgee.com
+
 ## Features
 
 - Fetches daily verse from Bible Gateway API
