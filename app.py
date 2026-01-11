@@ -36,10 +36,10 @@ def fetch_and_convert():
       <link>{content['votd']['permalink']}</link>
       <description><![CDATA[Verse of the Day
 
-      {clean_text(content['votd']['text'])}
+{clean_text(content['votd']['text'])}
 
-      {content['votd']['reference']}
-      ]]></description>
+{content['votd']['reference']}
+]]></description>
     </item>"""
 
     # Build RSS 2.0 feed
